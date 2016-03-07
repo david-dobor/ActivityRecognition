@@ -79,7 +79,7 @@ library(rpart.plot) # Decision Tree plot
 library(randomForest)
 ```
 
-## Partitionin the Training Set
+## Partitioning the Training Set
 We now partition the traing data into two subsets to perform cross-validation. 
 The split will be 75% for training / 25% for validation.
 
@@ -104,7 +104,7 @@ plot(subTraining$classe, col="lightsteelblue3", main="Class Label Distribution i
 ```
 
 # Predictions
-We try two different methods for predicting the class labels: Decision Trees and Random Forests. In the end we will select the model that attains best accuracy.
+We try two different methods for predicting the class labels: Decision Trees and Random Forests. In the end we will select the model that attains best accuracy. 
 
 ## Predicting Using Decision Trees 
 
@@ -124,11 +124,37 @@ We see that the accuracy is actually horrible here, so we would like to try some
 
 ## A Better Model: Random Forest 
 
-```{r warning=FALSE, message=FALSE, cache=TRUE}
-mod.randForest <- randomForest(classe ~. , data=subTraining, method="class")
-prediction2 <- predict(mod.randForest, subTesting, type = "class")
+We note that we have a large number of features that can be potentially used for prediction. One advantage of using random forests for classificaton is that the algorithm automatically selects the best features for prediction. It is also robust to outliers. 
 
-# Let's see how good the prediction is:
+We use a random forest with 10 folds for cross validation and limit the number of trees to 200. 
+
+```{r warning=FALSE, message=FALSE, cache=TRUE}
+
+ctrl <- trainControl(method = "cv", number=10)
+mod.randForest  <- train(classe ~ .,
+                        data = subTraining,
+                        method = "rf",  
+                        trControl = ctrl,
+                        allowParallel=TRUE,
+                        ntree=200)
+
+print(mod.randForest)
+```
+
+
+## Some Plots of the Fitted Model
+
+Plot that demonstrates the order of importance of the features:
+
+```{r warning=FALSE, message=FALSE, cache=TRUE}
+print(plot(varImp(mod.randForest)))
+```
+
+The confusion matrix is as follows:
+
+```{r warning=FALSE, message=FALSE, cache=TRUE}
+#mod.randForest <- randomForest(classe ~. , data=subTraining, method="class")
+prediction2 <- predict(mod.randForest, subTesting, type = "raw")
 confusionMatrix(prediction2, subTesting$classe)
 ```
 
@@ -139,7 +165,7 @@ So the Random Forest has an excellent accuracy.
 
 ```{r warning=FALSE, message=FALSE, cache=TRUE}
 # Predict outcome labels on the original Testing data set
-predictfinal <- predict(mod.randForest, test, type="class")
+predictfinal <- predict(mod.randForest, test, type="raw")
 predictfinal
 ```{r warning=FALSE, message=FALSE, cache=TRUE}
 

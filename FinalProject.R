@@ -46,6 +46,7 @@ head(subTesting)
 # We can take a look at the data. The 5 levels of `classe` variables in `subTraining` are distributed as follows:
 
 plot(subTraining$classe, col="lightsteelblue3", main="Class Label Distribution in the subTraining Data", xlab="Class Labels", ylab="Frequency")
+#qplot(subTraining$classe, main="Class Label Distribution in the subTraining Data", xlab="Class Labels", ylab="Frequency")
 
 ##################################
 # Predicting Using Decision Tree #
@@ -74,12 +75,34 @@ confusionMatrix(prediction2, subTesting$classe)
 
 # So the Random Forest has an excellent accuracy. 
 
+#######################################################
+######## Random Forests with the caret package ######## 
+#######################################################
+
+# We use a random forest with 10 folds for cross validation and limit the number of trees to 200. 
+ctrl <- trainControl(method = "cv", number=10)
+rf_fit <- train(classe ~ .,
+                data = subTraining,
+                method = "rf",  
+                trControl = ctrl,
+                allowParallel=TRUE,
+                ntree=200)
+
+
+print(rf_fit)
+
+# Plot that demonstrates the order of importance of the features 
+
+print(plot(varImp(rf_fit)))
+
+#######################################################
+
 ##################################
 #        Final Prediction        #
 ##################################
 
 # Predict outcome labels on the original Testing data set
-predictfinal <- predict(mod.randForest, test, type="class")
+predictfinal <- predict(rf_fit, test, type="raw")
 predictfinal
 
 
